@@ -15,40 +15,38 @@ typedef struct node{
     node *left, *right;
 }node;
 
-void allocNewNode(node*** np, element input){
+node* allocNewNode(element input){
     node* new_node = (node*)malloc(sizeof(node));
     new_node->e = input;
     new_node->left = new_node->right = NULL;
-    **np = new_node;
+    return new_node;
 }
 
-node* search(node** root, element input){
-    if(!root) return root;
+node* searchNode(node* root, element input){
+    if(!root)
+        return root;
 
-    int flag = strcmp(root->e.word, input.word);
-    if(!flag){
-        if(flag < 0)
-            search(root->right, input);
-        else search(root->left, input);
-    }
-    else return root;
+    if(strcmp(root->e.word, input.word) < 0)
+        searchNode(root->right, input);
+    else if(strcmp(root->e.word, input.word) > 0)
+        searchNode(root->left, input);
+    else 
+        return root;
 }
 
 void insertNode(node** root, element input){
-    if(*root == NULL){
-        allocNewNode(&root, input);
+    if(!(*root)){
+        *root = allocNewNode(input);
         return;
     }
 
-    /*
-    node** tmp = search(root, input);
+    node* tmp = searchNode(*root, input);
     if(!tmp){
-        allocNewNode(&tmp, input);
+        tmp = allocNewNode(input);
         return;
     }
 
-    printf("[word]%s already exist!\n", input.word);
-    */
+    printf("%s는 이미 사전 안에 있습니다.\n", input.word);
 }
 
 void showMenu(){
@@ -78,6 +76,7 @@ int main(int argc, char* argv[]){
                 break;
             case 'd':
                 break;
+                /*
             case 's':
                 printf("word: ");
                 fgets(input.word, sizeof(input.word), stdin);
@@ -88,6 +87,7 @@ int main(int argc, char* argv[]){
                     printf("[word %s]:[meaning: %s]", tmp->e.word, tmp->e.meaning);
                 else printf("Search Failed...\n");
                 break;
+                */
             case 'p':
                 break;
             case 'q':
