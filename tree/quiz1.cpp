@@ -89,10 +89,22 @@ void find_max(Node* root){
     printf("[Max] %d\n", max);
 }
 
+int c = 1;
+void post_order(Node* root){
+    if(c++ == 1) printf("\n[post order] ");
+
+    if(!root)
+        return;
+    post_order(root->left);
+    post_order(root->right);
+    printf("%d ", root->data);
+}
+
 int main(void){
     Node* root = make_tree();
     level_order(root);
     pre_order(root);
+    post_order(root);
     find_leafnodes(root);
     find_max(root);
     return 0;

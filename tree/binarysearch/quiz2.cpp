@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <queue>
+#include <stack>
 using namespace std;
 
 typedef struct node{
@@ -31,12 +32,10 @@ int searchNode(int count, node* root, int input){
         else if(root->val > input){
             count++;
             root = root->left;
-            //searchNode(count, root->left, input);
         }
         else{//(root->val < input){
             count++;
             root = root->right;
-            //searchNode(count, root->right, input);
         }
     }
     if(!root) return 0;
@@ -59,25 +58,56 @@ void levelOrder(node* root){
     printf("\n");
 }
 
-int free_count = 0;
-void freeNode(node** root){
+/* free nodes levelwisely
+int freeNode(node** root){
+    int count = 0;
     queue<node*> q;
     if(!*root) return;
 
     q.push(*root);
     while(!q.empty()){
         *root = q.front();
-        node* left = NULL;
-        node* right = NULL;
-        if((*root)->left) left = (*root)->left;
-        if((*root)->right) right = (*root)->right;
+        if((*root)->left) q.push((*root)->left);
+        if((*root)->right) q.push((*root)->right);
         printf("%d 노드 free 됨.\n", (*root)->val);
         free(*root);
-        free_count++;
+        count++;
         q.pop();
-        if(left) q.push(left);
-        if(right)q.push(right);
     }
+    return count;
+}
+*/
+
+int freeNode(node** root){
+    int count =  0;
+    if(!*root) return count;
+
+    stack<node**> s;
+    s.push(root);
+
+    while(!s.empty()){
+        node** curr = s.top();
+        while((*curr)->left != NULL || (*curr)->right != NULL){
+            if((*curr)->left){
+                curr = &((*curr)->left);
+                s.push(curr);
+                continue;
+            }
+            if((*curr)->right){
+                curr = &((*curr)->right);
+                s.push(curr);
+            }
+
+        }
+        printf("%d 노드가 free 됨.\n", (*curr)->val);
+        free(*curr);
+        *curr = NULL;
+        //if(curr->left) curr->left = NULL;
+        //if(curr->right) curr->left = NULL;
+        count++;
+        s.pop();
+    }
+    return count;
 }
 
 void showMenu(){
@@ -100,10 +130,10 @@ int main(int argc, char* argv[]){
         scanf("%d", &menu);
         switch(menu){
             case 1:
-                while(input != -1){
+                while(1){
                     printf("입력(종료는 -1):");
                     scanf("%d", &input);
-                    if(input == -1) continue;
+                    if(input == -1) break;
                     insertNode(&root, input);
                 }
                 break;
@@ -113,16 +143,17 @@ int main(int argc, char* argv[]){
                 int tmp = searchNode(0, root, input);
                 if(tmp == 0) printf("%d는 존재하지 않습니다.\n", input);
                 else printf("%d는 %d회 탐색으로 발견\n", input, tmp);
-                break;
                 }
+                break;
             case 3:
                 levelOrder(root);
                 break;
-            case 4:
-                freeNode(&root);
+            case 4:{
+                int free_count = freeNode(&root);
                 printf("총 %d개의 노드가 free 됨.\n", free_count);
                 printf("[종료]\n");
                 flag = 0;
+                }
                 break;
         }
     }
