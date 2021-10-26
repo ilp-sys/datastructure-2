@@ -6,31 +6,44 @@
 #define MAX_INPUT_SIZE 100
 using namespace std;
 
-typedef struct node{
+typedef struct{
     char key;
     int count;
+}element;
+
+typedef struct node{
+    element e;
     node *left, *right;
 }node;
 
-node* allocNewNode(char c, node* left, node* right){
+node* allocNewNode(char c){
     node* new_node = (node*)malloc(sizeof(node));
-    new_node->key = c;
-    new_node->count = 1;
-    new_node->left = left;
-    new_node->right = right;
+    new_node->e.key = c;
+    new_node->e.count = 1;
+    new_node->left = new_node->right = NULL;
+    return new_node;
+}
+
+node* allocNewNode(char c, int count){//overload
+    node* new_node = (node*)malloc(sizeof(node));
+    new_node->e.key = c;
+    new_node->e.count = count;
+    new_node->left = new_node->right = NULL;
     return new_node;
 }
 
 void insertNodeBST(char c, node** root){
-    if(!*root)
-        *root = allocNewNode(c, NULL, NULL);
+    if(!*root){
+        *root = allocNewNode(c);
+        return;
+    }
 
-    if((*root)->key > c)
+    if((*root)->e.key > c)
         insertNodeBST(c, &((*root)->left));
-    else if((*root)->key < c)
+    else if((*root)->e.key < c)
         insertNodeBST(c, &((*root)->right));
     else //((*root)->key == c)
-        (*root)->count++;
+        (*root)->e.count++;
 }
 
 void getElementCount(char* input, node** root){
@@ -39,112 +52,114 @@ void getElementCount(char* input, node** root){
     }
 }
 
-void appendLastBST(element e, node** root){
-    while(*root) *root = (*root)->right;
-    *root = allocNewNode(e, NULL, NULL);
+void appendLastBST(char c, int count, node** root){
+    if(*root == NULL){ 
+        *root = allocNewNode(c, count);
+        return;
+    }
+    appendLastBST(c, count, &((*root)->right));
 }
 
-/*
-element deleteNodeBST(node** root, char c){
-    element e;
+int count = 0;
+void deleteNodeBST(node** root, char c){
+    if(!*root) return;
 
     if((*root)->e.key > c) deleteNodeBST(&((*root)->left), c);
     else if((*root)->e.key < c) deleteNodeBST(&((*root)->right), c);
     else{//key == c
-        if((*root)->left){
+        if((*root)->left == NULL){
             node *tmp = *root;
-            e = (*root)->e;
             *root = (*root)->right;
+            count = tmp->e.count;
             free(tmp);
         }
-        else if((*root)->right){
+        else if((*root)->right == NULL){
             node *tmp = *root;
-            e = (*root)->e;
             *root = (*root)->left;
+            count = tmp->e.count;
             free(tmp);
         }
         else{
             node* tmp  = *root;
-            e = (*root)->e;
             while(tmp) tmp = tmp->left;
-            (*root)->e = tmp->e;
+            (*root)->e.key = tmp->e.key;
+            (*root)->e.count = tmp->e.count;
+            count = tmp->e.count;
             free(tmp);
         }
     }
-    return e;
-}
-*/
-
-int isTerminal(node* root){
-    return (root->left == NULL && root->right == NULL) ? 1 : 0;
 }
 
-void reformBST(node** root, char c){//if there's node we're looking for, append it last and delete it
-    
-}
 
 void printElement(node* root){ //print tree inorderly
     if(!root) return;
 
     printElement(root->left);
 
-    if(root->key == '.') printf("PERIOD(%d)/ ", root->count);
-    else if(root->key == ' ') printf("SPACE(%d)/ ", root->count);
-    else printf("%c(%d)/ ", root->key, root->count);
+    if(root->e.key == '.') printf("PERIOD(%d)/ ", root->e.count);
+    else if(root->e.key == ' ') printf("SPACE(%d)/ ", root->e.count);
+    else printf("%c(%d)/ ", root->e.key, root->e.count);
 
     printElement(root->right);
 }
 
-void insertElementPQ(element e, vector<element>* heap){
-    heap->push_back(e);
+void insertElementPQ(element e, vector<element>& heap){
+    heap.push_back(e);
     
-    int index = heap->size();
-    while(heap->size() != 1 && (*heap)[index/2].count < e.count){
-        element tmp = (*heap)[index/2];
-        (*heap)[index/2] = (*heap)[index];
-        (*heap)[index] = tmp;
+    int index = heap.size() -1;
+    while(heap.size() != 1 && heap.size() != 2 && heap[index/2].count > e.count){
+        element tmp = heap[index/2];
+        heap[index/2] = heap[index];
+        heap[index] = tmp;
         index /= 2;
     }
 }
 
 void heapsort(vector<element> &heap, node* root){
     stack<node*> s;
-    s.push(root);
-    node* curr = s.top();
-
-    while(!s.empty()){
-        while(curr){
-            curr = curr->left;
+    node* curr = root;
+    while(curr != NULL || s.empty() == false){
+        while(curr != NULL){
             s.push(curr);
+            curr = curr->left;
         }
         curr = s.top();
-        insertElementPQ(curr->e, &heap);
         s.pop();
+        insertElementPQ(curr->e, heap);
         curr = curr->right;
     }
 }
 
 void deleteElementPQ(vector<element> &heap){
-    printf("%c(%d), ", heap[1].key, heap[1].count);
-    heap[1] = heap.back();
+    int parent, child;
+    element item, temp;
+
+    item = heap[1];
+    temp = heap.back();
     heap.pop_back();
 
-    int parent = 1;
-    int child = parent*2;
-    while(child <= heap.size()){
-        if((child < heap.size()) && (heap[child].count > heap[child+1].count))
-            child++;
-        if((heap[child].count < heap[parent].count)){
-            element tmp = heap[parent];
-            heap[parent] = heap[child];
-            heap[child] = tmp;
-        }
+    parent = 1;
+    child = 2;
+    while(child <= heap.size() -1){
+        if((child < heap.size() -1) && (heap[child].count > heap[child+1].count)) child++;
+        if(temp.count <= heap[child].count) break;
+        heap[parent] = heap[child];
+        parent = child;
+        child *= 2;
     }
+
+    heap[parent] = temp;
+
+    if(item.key == '.') printf("PERIOD(%d)/ ", item.count);
+    else if(item.key == ' ') printf("SPACE(%d)/ ", item.count);
+    else printf("%c(%d), ", item.key, item.count);
 }
 
 void printPriorQ(vector<element> heap){
-    for(int i = 0; i < heap.size(); i++)
+    int iter = heap.size();
+    for(int i = 1; i < iter; i++)
         deleteElementPQ(heap);
+    printf("\n");
 }
 
 int main(int argc, char* argv[]){
@@ -166,21 +181,24 @@ int main(int argc, char* argv[]){
    getElementCount(input, &root);
    
    //print element count -> traverse inorderly
-   reformBST(&root, '.'); // move position of period to the very right side
-   reformBST(&root, ' '); // move position of space to the very right side
+   deleteNodeBST(&root, '.'); // move position of period to the very right side
+   if(count != 0) appendLastBST('.', count, &root);
+   count = 0;
+   deleteNodeBST(&root, ' '); // move position of space to the very right side
+   if(count != 0) appendLastBST(' ', count, &root);
+   count = 0;
+
    printElement(root);
    printf("\n");
 
-   /*
    //heap sorting -> construct min heap - key: count
    vector<element> heap;
-   element dummy = {'\0', -999};
+   element dummy = {0,0};
    heap.push_back(dummy);
    heapsort(heap, root);
     
    //print min-heap
    printPriorQ(heap);
-   */
 
    return 0;
 }
