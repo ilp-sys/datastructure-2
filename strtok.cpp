@@ -1,0 +1,13 @@
+#include <stdio.h>
+#include <string.h>
+
+int main(int argc, char* argv[]){
+    char str[] = "Block D Mask";
+    char* ptr = strtok(str, " ");
+    while(ptr != NULL){
+        printf("%s\n", ptr);
+        ptr = strtok(NULL, " ");
+    }
+    return 0;
+}
+
