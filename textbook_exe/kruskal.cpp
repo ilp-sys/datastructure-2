@@ -30,16 +30,16 @@ typedef struct Egde{
 }Edge;
 
 typedef struct GraphType{
-    int n;
+    int n; //number of edges
     Egde edges[2*MAX_VERTICES];
 }GraphType;
 
 void graph_init(GraphType *g){
     g->n = 0;
     for(int i = 0; i < 2*MAX_VERTICES; i++){
-        g->edges[g->n].u = 0;
-        g->edges[g->n].v = 0;
-        g->edges[g->n].w = INF;
+        g->edges[i].u = 0;
+        g->edges[i].v = 0;
+        g->edges[i].w = INF;
     }
 }
 
@@ -59,12 +59,13 @@ int compare(const void* a, const void* b){
 void kruskal(GraphType *g){
     int edge_accepted = 0; //number of edges selected
 
-    set_init(g->n);
-    qsort(g->edges, g->n, sizeof(Edge), compare);
+    set_init(g->n);//부모포인터 집합 초기화
+          //정렬할 배열, 배열의 원소 수, 원소 하나의 크기, 비교를 수행할 함수 포인터                                     
+    qsort(g->edges, g->n, sizeof(Edge), compare);//edge를 가중치 순으로 정렬
 
     printf("Kruskal minimum spanning tree\n");
     int i = 0;
-    while(edge_accepted < (g->n -1)){
+    while(edge_accepted < (g->n -1)){//간선 = 모든 노드의 수 -1
         Edge e = g->edges[i];
         int uset = set_find(e.u);//vertex u set number
         int vset = set_find(e.v);//vertex v set number
@@ -93,7 +94,6 @@ int main(int argc, char* argv[]){
 
     kruskal(g);
     free(g);
-   
     return 0;
 }
-
+//간선 = 모든 노드의 수 -1
